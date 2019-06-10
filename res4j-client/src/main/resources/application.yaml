@@ -1,0 +1,12 @@
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      failureRateThreshold: 50
+      ringBufferSizeInClosedState: 5
+      ringBufferSizeInHalfOpenState: 5
+      waitDurationInOpenState: 20000
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+
+management.endpoints.web.exposure.include: health,circuitbreakers,metrics
+management.endpoint.health.show-details: always
+
