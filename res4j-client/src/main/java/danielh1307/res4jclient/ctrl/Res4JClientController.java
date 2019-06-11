@@ -24,13 +24,18 @@ public class Res4JClientController {
     @GetMapping("/res4jclient/host-not-available")
     @CircuitBreaker(name = "default")
     @LogExecutionTime
-    public String hostNotAvailable() throws Exception {
+    public String hostNotAvailable() {
         Supplier<ResponseEntity<String>> supplier = () -> {
             System.out.println("Calling service ...");
             return this.restTemplate.getForEntity("http://localhost:8888/res4jservice/mock", String.class);
         };
 
-        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return responseEntity.getBody() + " Welt" + "\n";
     }
@@ -38,13 +43,18 @@ public class Res4JClientController {
     @GetMapping("/res4jclient/host-delayed")
     @CircuitBreaker(name = "default")
     @LogExecutionTime
-    public String hostDelayed() throws Exception {
+    public String hostDelayed() {
         Supplier<ResponseEntity<String>> supplier = () -> {
             System.out.println("Calling service ...");
             return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/delayed", String.class);
         };
 
-        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return responseEntity.getBody() + " Welt" + "\n";
     }
@@ -52,13 +62,18 @@ public class Res4JClientController {
     @GetMapping("/res4jclient/host-working")
     @CircuitBreaker(name = "default")
     @LogExecutionTime
-    public String hostWorking() throws Exception {
+    public String hostWorking() {
         Supplier<ResponseEntity<String>> supplier = () -> {
             System.out.println("Calling service ...");
             return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/working", String.class);
         };
 
-        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return responseEntity.getBody() + " Welt" + "\n";
     }
@@ -66,13 +81,18 @@ public class Res4JClientController {
     @GetMapping("/res4jclient/host-business-exception")
     @CircuitBreaker(name = "default")
     @LogExecutionTime
-    public String hostBusinessException() throws Exception {
+    public String hostBusinessException() {
         Supplier<ResponseEntity<String>> supplier = () -> {
             System.out.println("Calling service ...");
             return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/business-exception", String.class);
         };
 
-        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return responseEntity.getBody() + " Welt" + "\n";
     }
@@ -80,13 +100,18 @@ public class Res4JClientController {
     @GetMapping("/res4jclient/host-technical-exception")
     @CircuitBreaker(name = "default")
     @LogExecutionTime
-    public String hostTechnicalException() throws Exception {
+    public String hostTechnicalException() {
         Supplier<ResponseEntity<String>> supplier = () -> {
             System.out.println("Calling service ...");
             return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/technical-exception", String.class);
         };
 
-        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        ResponseEntity<String> responseEntity;
+        try {
+            responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return responseEntity.getBody() + " Welt" + "\n";
     }

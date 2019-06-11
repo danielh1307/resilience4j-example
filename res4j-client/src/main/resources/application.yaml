@@ -6,7 +6,7 @@ resilience4j.circuitbreaker:
       ringBufferSizeInHalfOpenState: 5
       waitDurationInOpenState: 20000
       automaticTransitionFromOpenToHalfOpenEnabled: true
-      recordExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException
+      recordExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException,java.lang.RuntimeException
 
 management.endpoints.web.exposure.include: health,circuitbreakers,metrics
 management.endpoint.health.show-details: always
