@@ -21,13 +21,69 @@ public class Res4JClientController {
         this.res4jHelper = res4jHelper;
     }
 
-    @GetMapping("/res4jclient/sample-retry")
+    @GetMapping("/res4jclient/host-not-available")
     @CircuitBreaker(name = "default")
     @LogExecutionTime
-    public String sampleServiceRetry() throws Exception {
+    public String hostNotAvailable() throws Exception {
         Supplier<ResponseEntity<String>> supplier = () -> {
             System.out.println("Calling service ...");
-            return this.restTemplate.getForEntity("http://localhost:8081/res4jservice/mock", String.class);
+            return this.restTemplate.getForEntity("http://localhost:8888/res4jservice/mock", String.class);
+        };
+
+        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+
+        return responseEntity.getBody() + " Welt" + "\n";
+    }
+
+    @GetMapping("/res4jclient/host-delayed")
+    @CircuitBreaker(name = "default")
+    @LogExecutionTime
+    public String hostDelayed() throws Exception {
+        Supplier<ResponseEntity<String>> supplier = () -> {
+            System.out.println("Calling service ...");
+            return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/delayed", String.class);
+        };
+
+        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+
+        return responseEntity.getBody() + " Welt" + "\n";
+    }
+
+    @GetMapping("/res4jclient/host-working")
+    @CircuitBreaker(name = "default")
+    @LogExecutionTime
+    public String hostWorking() throws Exception {
+        Supplier<ResponseEntity<String>> supplier = () -> {
+            System.out.println("Calling service ...");
+            return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/working", String.class);
+        };
+
+        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+
+        return responseEntity.getBody() + " Welt" + "\n";
+    }
+
+    @GetMapping("/res4jclient/host-business-exception")
+    @CircuitBreaker(name = "default")
+    @LogExecutionTime
+    public String hostBusinessException() throws Exception {
+        Supplier<ResponseEntity<String>> supplier = () -> {
+            System.out.println("Calling service ...");
+            return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/business-exception", String.class);
+        };
+
+        ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);
+
+        return responseEntity.getBody() + " Welt" + "\n";
+    }
+
+    @GetMapping("/res4jclient/host-technical-exception")
+    @CircuitBreaker(name = "default")
+    @LogExecutionTime
+    public String hostTechnicalException() throws Exception {
+        Supplier<ResponseEntity<String>> supplier = () -> {
+            System.out.println("Calling service ...");
+            return this.restTemplate.getForEntity("http://localhost:9080/res4jservice/technical-exception", String.class);
         };
 
         ResponseEntity<String> responseEntity = this.res4jHelper.executeWithRetriesAndTimeout(supplier);

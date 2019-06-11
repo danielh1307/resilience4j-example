@@ -39,7 +39,7 @@ public class ApplicationConfiguration {
     public RetryConfig retryConfig() {
         return RetryConfig.custom()
                 .maxAttempts(4)
-                .waitDuration(Duration.ofMillis(2000))
+                .waitDuration(Duration.ofMillis(1500))
                 .retryExceptions(HttpServerErrorException.class, IOException.class, ConnectException.class, ResourceAccessException.class)
                 .build();
     }
