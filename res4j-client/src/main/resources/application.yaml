@@ -2,12 +2,21 @@ resilience4j.circuitbreaker:
   backends:
     default:
       failureRateThreshold: 50
-      ringBufferSizeInClosedState: 5
-      ringBufferSizeInHalfOpenState: 5
-      waitDurationInOpenState: 20000
+      ringBufferSizeInClosedState: 10
+      ringBufferSizeInHalfOpenState: 10
+      waitDurationInOpenState: 30000
       automaticTransitionFromOpenToHalfOpenEnabled: true
       recordExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException,java.lang.RuntimeException
+      ignoreExceptions: org.springframework.web.client.HttpClientErrorException
 
-management.endpoints.web.exposure.include: health,circuitbreakers,metrics
+resilience4j.retry:
+  backends:
+    default:
+      maxRetryAttempts: 4
+      waitDuration: 1500
+      retryExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException,java.lang.RuntimeException
+      ignoreExceptions: org.springframework.web.client.HttpClientErrorException,danielh1307.res4jclient.ctrl.TimeoutException
+
+management.endpoints.web.exposure.include: health,metrics
 management.endpoint.health.show-details: always
 

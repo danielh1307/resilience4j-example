@@ -6,14 +6,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class Res4JServiceController {
 
-    @GetMapping("/res4jservice/delayed")
-    public String delayed() throws InterruptedException {
-        Thread.sleep(15000);
+    @GetMapping("/res4jservice/working")
+    public String working() {
         return "Hello";
     }
 
-    @GetMapping("/res4jservice/working")
-    public String working() {
+    @GetMapping("/res4jservice/delayed")
+    public String delayed() throws InterruptedException {
+        Thread.sleep(15000);
         return "Hello";
     }
 

@@ -36,22 +36,8 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public RetryConfig retryConfig() {
-        return RetryConfig.custom()
-                .maxAttempts(4)
-                .waitDuration(Duration.ofMillis(1500))
-                .retryExceptions(HttpServerErrorException.class, IOException.class, ConnectException.class, ResourceAccessException.class)
-                .build();
-    }
-
-    @Bean
-    public Retry retry(RetryConfig retryConfig) {
-        return Retry.of("id", retryConfig);
-    }
-
-    @Bean
-    public Res4jHelper res4jHelper(TimeLimiter timeLimiter, Retry retry) {
-        return new Res4jHelper(timeLimiter, retry);
+    public Res4jHelper res4jHelper(TimeLimiter timeLimiter) {
+        return new Res4jHelper(timeLimiter);
     }
 
 }

@@ -13,11 +13,18 @@ public class LogExecutionTimeAspect {
     public Object logExecutionTime(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         long start = System.currentTimeMillis();
 
-        Object proceed = proceedingJoinPoint.proceed();
+        System.out.println("Calling " + proceedingJoinPoint.getSignature() + " ...");
 
-        long executionTime = System.currentTimeMillis() - start;
-
-        System.out.println(proceedingJoinPoint.getSignature() + " executed in " + executionTime + "ms");
+        Object proceed;
+        try {
+            proceed = proceedingJoinPoint.proceed();
+        } catch (Throwable t) {
+            System.out.println("Call to " + proceedingJoinPoint.getSignature() + " not successful: " + t);
+            throw t;
+        } finally {
+            long executionTime = System.currentTimeMillis() - start;
+            System.out.println(proceedingJoinPoint.getSignature() + " executed in " + executionTime + "ms");
+        }
 
         return proceed;
     }
