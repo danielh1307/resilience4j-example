@@ -9,6 +9,7 @@ resilience4j.circuitbreaker:
       slowCallRateThreshold: 50 # in percentage - if number of slow calls exceeds this threshold, the circuit changes to OPEN
       automaticTransitionFromOpenToHalfOpenEnabled: true
       recordExceptions: danielh1307.res4jclient.ctrl.GenericServiceException
+      ignoreExceptions: org.springframework.web.client.HttpClientErrorException
     restricted:
       registerHealthIndicator: true
       failureRateThreshold: 10
@@ -20,6 +21,14 @@ resilience4j.circuitbreaker:
       baseConfig: default
     backendB:
       baseConfig: restricted
+
+resilience4j.retry:
+  backends:
+    backendA:
+      maxRetryAttempts: 4
+      waitDuration: 1500
+      retryExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException,java.lang.RuntimeException
+      ignoreExceptions: org.springframework.web.client.HttpClientErrorException,danielh1307.res4jclient.ctrl.TimeoutException
 
 management.health.circuitbreakers.enabled: true
 management.health.ratelimiters.enabled: true

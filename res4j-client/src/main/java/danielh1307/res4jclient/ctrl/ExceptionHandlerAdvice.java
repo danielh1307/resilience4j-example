@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 
-import java.util.concurrent.TimeoutException;
-
 @ControllerAdvice
 @ResponseBody
 public class ExceptionHandlerAdvice {
