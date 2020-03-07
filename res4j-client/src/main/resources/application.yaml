@@ -1,11 +1,28 @@
 resilience4j.circuitbreaker:
   configs:
     default:
-      failureRateThreshold: 50
-      ringBufferSizeInClosedState: 5
-      ringBufferSizeInHalfOpenState: 5
-      waitDurationInOpenState: 20000
+      registerHealthIndicator: true # metrics are published on /health endpoint
+      failureRateThreshold: 50 # in percentage - if number of failed calls exceeds this threshold, the circuit changes to OPEN
+      slidingWindowSize: 5
+      waitDurationInOpenState: 20000 # in milliseconds - after this time, state changes from OPEN to HALF_OPEN
+      slowCallDurationThreshold: 5000 # in milliseconds - if the call lasts longer, it is considered to be slow
+      slowCallRateThreshold: 50 # in percentage - if number of slow calls exceeds this threshold, the circuit changes to OPEN
       automaticTransitionFromOpenToHalfOpenEnabled: true
+      recordExceptions: danielh1307.res4jclient.ctrl.GenericServiceException
+    restricted:
+      registerHealthIndicator: true
+      failureRateThreshold: 10
+      slidingWindowSize: 5
+      slowCallDurationThreshold: 1000
+      slowCallRateThreshold: 50
+  backends:
+    backendA:
+      baseConfig: default
+    backendB:
+      baseConfig: restricted
+
+management.health.circuitbreakers.enabled: true
+management.health.ratelimiters.enabled: true
 
 management.endpoints.web.exposure.include: health,circuitbreakers,metrics
 management.endpoint.health.show-details: always
