@@ -89,6 +89,13 @@ public class Res4JClientController {
         return doServiceCall("http://localhost:9080/res4jservice/e500", String.class);
     }
 
+    @GetMapping("res4jclient/backendA/conn-refused")
+    @CircuitBreaker(name = "backendA")
+    @Retry(name = "backendA")
+    public String connectionRefused() {
+        return doServiceCall("http://localhost:8888/does-not-exist", String.class);
+    }
+
     @SuppressWarnings("SameParameterValue")
     private <T> T doServiceCall(String url, Class<T> expectedResponseClass) {
         try {
