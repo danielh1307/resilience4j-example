@@ -110,7 +110,7 @@ public class Res4JClientController {
             LOGGER.error(format("For url %s, server responded with a server exception: %s", url, ex.getMessage()));
             throw ex;
         } catch (java.util.concurrent.TimeoutException ex) {
-            LOGGER.error(format("For url %s, server exceeded timout", url));
+            LOGGER.error(format("For url %s, server exceeded timeout", url));
             throw new TimeoutException();
         } catch (Exception ex) {
             LOGGER.error(format("For url %s, server responded with unknown exception: %s", url, ex.getMessage()));
@@ -119,16 +119,19 @@ public class Res4JClientController {
     }
 
     private <T> T executeWithTimeout(Supplier<T> supplier) throws Exception {
-        Try<T> executionResult;
+        Try<T> executionResult; // represents either success or failure
 
         executionResult = executeWithTimeout(
                 supplyAsync(() -> ofSupplier(supplier))
         );
 
-        return executionResult.get();
+        return executionResult.get(); // gets the result if it is a success, otherwise throws an error
     }
 
     private <T> T executeWithTimeout(CompletableFuture<T> completableFuture) throws Exception {
+        // uses Future.get(long timeout, TimeUnit unit) internally
+        // the method waits for at most the given time to execute
+        // and since it is called on the calling thread, it blocks it
         return this.timeLimiter.executeFutureSupplier(() -> completableFuture);
     }
 }
