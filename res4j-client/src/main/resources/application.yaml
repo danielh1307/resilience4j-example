@@ -11,7 +11,7 @@ resilience4j.circuitbreaker:
       permittedNumberOfCallsInHalfOpenState: 2 # when in HALF_OPEN, after this number of calls resilience4j decided whether to change to OPEN or CLOSED
       automaticTransitionFromOpenToHalfOpenEnabled: true
       recordExceptions: org.springframework.web.client.HttpServerErrorException,danielh1307.res4jclient.ctrl.GenericServiceException,danielh1307.res4jclient.ctrl.TimeoutException #TimeoutException is now regarded as "slowFailedCalls"
-      ignoreExceptions: org.springframework.web.client.HttpClientErrorException,danielh1307.res4jclient.ctrl.NotFoundException # these exceptions are ignored, the calls are not even counted (neither regarded as SUCCESS nor FAILED)
+      ignoreExceptions: org.springframework.web.client.HttpClientErrorException # these exceptions are ignored, the calls are not even counted (neither regarded as SUCCESS nor FAILED)
     restricted:
       registerHealthIndicator: true
       failureRateThreshold: 10
@@ -29,7 +29,7 @@ resilience4j.retry:
     backendA:
       maxRetryAttempts: 4
       waitDuration: 1500
-      retryExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException
+      retryExceptions: org.springframework.web.client.HttpServerErrorException,danielh1307.res4jclient.ctrl.GenericServiceException
       ignoreExceptions: org.springframework.web.client.HttpClientErrorException,danielh1307.res4jclient.ctrl.TimeoutException
 
 management.health.circuitbreakers.enabled: true
