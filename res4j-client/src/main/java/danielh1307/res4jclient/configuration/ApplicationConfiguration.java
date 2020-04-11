@@ -19,7 +19,7 @@ public class ApplicationConfiguration {
     @Bean
     public TimeLimiterConfig timeLimiterConfig() {
         return TimeLimiterConfig.custom()
-                .timeoutDuration(Duration.ofMillis(10000))
+                .timeoutDuration(Duration.ofMillis(6000))
                 .build();
     }
 

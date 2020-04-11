@@ -3,13 +3,15 @@ resilience4j.circuitbreaker:
     default:
       registerHealthIndicator: true # metrics are published on /health endpoint
       failureRateThreshold: 50 # in percentage - if number of failed calls exceeds this threshold, the circuit changes to OPEN
-      slidingWindowSize: 5
+      slidingWindowSize: 20 # Configures the size of the sliding window which is used to record the outcome of calls when the CircuitBreaker is closed.
+      minimumNumberOfCalls: 5 # Configures the minimum number of calls which are required (per sliding window period) before the CircuitBreaker can calculate the error rate.
       waitDurationInOpenState: 20000 # in milliseconds - after this time, state changes from OPEN to HALF_OPEN
-      slowCallDurationThreshold: 5000 # in milliseconds - if the call lasts longer, it is considered to be slow
+      slowCallDurationThreshold: 4000 # in milliseconds - if the call lasts longer, it is considered to be slow
       slowCallRateThreshold: 50 # in percentage - if number of slow calls exceeds this threshold, the circuit changes to OPEN
+      permittedNumberOfCallsInHalfOpenState: 2 # when in HALF_OPEN, after this number of calls resilience4j decided whether to change to OPEN or CLOSED
       automaticTransitionFromOpenToHalfOpenEnabled: true
-      recordExceptions: danielh1307.res4jclient.ctrl.GenericServiceException
-      ignoreExceptions: org.springframework.web.client.HttpClientErrorException
+      recordExceptions: org.springframework.web.client.HttpServerErrorException,danielh1307.res4jclient.ctrl.GenericServiceException,danielh1307.res4jclient.ctrl.TimeoutException #TimeoutException is now regarded as "slowFailedCalls"
+      ignoreExceptions: org.springframework.web.client.HttpClientErrorException,danielh1307.res4jclient.ctrl.NotFoundException # these exceptions are ignored, the calls are not even counted (neither regarded as SUCCESS nor FAILED)
     restricted:
       registerHealthIndicator: true
       failureRateThreshold: 10
@@ -27,7 +29,7 @@ resilience4j.retry:
     backendA:
       maxRetryAttempts: 4
       waitDuration: 1500
-      retryExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException,java.lang.RuntimeException
+      retryExceptions: org.springframework.web.client.HttpServerErrorException,java.io.IOException,java.net.ConnectException,org.springframework.web.client.ResourceAccessException
       ignoreExceptions: org.springframework.web.client.HttpClientErrorException,danielh1307.res4jclient.ctrl.TimeoutException
 
 management.health.circuitbreakers.enabled: true

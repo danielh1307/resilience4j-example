@@ -1,27 +1,29 @@
 package danielh1307.res4jclient.ctrl;
 
-import danielh1307.res4jclient.infrastructure.support.LogExecutionTime;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.vavr.control.Try;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 import static io.vavr.control.Try.ofSupplier;
+import static java.lang.String.format;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @RestController
 public class Res4JClientController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Res4JClientController.class);
 
     private RestTemplate restTemplate;
     private TimeLimiter timeLimiter;
@@ -31,160 +33,82 @@ public class Res4JClientController {
         this.timeLimiter = timeLimiter;
     }
 
-    @GetMapping("/res4jclient/host-not-available")
-    @CircuitBreaker(name = "default")
-    @Retry(name = "default")
-    @LogExecutionTime
-    public String hostNotAvailable() {
-        Supplier<ResponseEntity<String>> supplier = () -> this.restTemplate.getForEntity("http://localhost:8888/res4jservice/mock", String.class);
-
-        ResponseEntity<String> responseEntity;
-        try {
-            responseEntity = executeWithTimeout(supplier);
-        } catch (HttpClientErrorException ex) {
-            throw ex;
-        } catch (TimeoutException ex) {
-            throw new danielh1307.res4jclient.ctrl.TimeoutException();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return responseEntity.getBody() + " Welt" + "\n";
-    }
-
-    @GetMapping("/res4jclient/sample-cb")
+    @GetMapping("/res4jclient/backendA/ok")
     @CircuitBreaker(name = "backendA")
-    public String sampleCircuitBreaker() throws Exception {
-        // as long as record exceptions are only GenericServiceExceptions, all other errors are not tracked by resilience4j
-        // so for example if the service is not available (500 connection refused) this does not activate the circuit breaker
-        return this.restTemplate.getForEntity("http://localhost:8081/res4jservice/ok", String.class).getBody() + "\n";
+    public String sampleCircuitBreaker() {
+        return doServiceCall("http://localhost:9080/res4jservice/ok", String.class);
     }
 
-    @GetMapping("/res4jclient/sample-cb-slow")
+    @GetMapping("/res4jclient/backendA/slow")
     @CircuitBreaker(name = "backendA")
-    public String sampleCircuitBreakerSlow() throws Exception {
-        // as long as record exceptions are only GenericServiceExceptions, all other errors are not tracked by resilience4j
-        // so for example if the service is not available (500 connection refused) this does not activate the circuit breaker
-        return this.restTemplate.getForEntity("http://localhost:8081/res4jservice/ok-slow", String.class).getBody() + "\n";
+    public String sampleCircuitBreakerSlow() {
+        // this is NOT regarded as a "slow call" by resilience 4j (for backend A 4s is the limit)
+        return doServiceCall("http://localhost:9080/res4jservice/ok-slow", String.class);
     }
 
-    @GetMapping("/res4jclient/sample-cb-slow-r")
+    @GetMapping("/res4jclient/backendB/slow")
     @CircuitBreaker(name = "backendB")
-    public String sampleCircuitBreakerSlowRestricted() throws Exception {
-        // as long as record exceptions are only GenericServiceExceptions, all other errors are not tracked by resilience4j
-        // so for example if the service is not available (500 connection refused) this does not activate the circuit breaker
-        return this.restTemplate.getForEntity("http://localhost:8081/res4jservice/ok-slow", String.class).getBody() + "\n";
+    public String sampleCircuitBreakerSlowB() {
+        // this is regarded as a "slow call" by resilience 4j (for backend B 1s is the limit)
+        return doServiceCall("http://localhost:9080/res4jservice/ok-slow", String.class);
     }
 
-    @GetMapping("/res4jclient/sample-cb500")
+    @GetMapping("/res4jclient/backendA/server-error")
     @CircuitBreaker(name = "backendA")
-    public String sampleCircuitBreaker500() throws Exception {
-        // here we are throwing a GenericServiceException in any case, except for a 404
-        // so all errors are tracked by resilience4j
-        try {
-            return this.restTemplate.getForEntity("http://localhost:8081/res4jservice/e500", String.class).getBody() + "\n";
-        } catch (HttpClientErrorException ex) {
-            if (ex.getStatusCode() == NOT_FOUND) {
-                throw new NotFoundException();
-            }
-            throw new GenericServiceException();
-        } catch (Exception ex) {
-            throw new GenericServiceException();
-        }
+    public String sampleCircuitBreaker500() {
+        return doServiceCall("http://localhost:9080/res4jservice/e500", String.class);
     }
 
-    @GetMapping("/res4jclient/sample-cb404")
+    @GetMapping("/res4jclient/backendA/not-found")
     @CircuitBreaker(name = "backendA")
-    public String sampleCircuitBreaker404() throws Exception {
-        try {
-            return this.restTemplate.getForEntity("http://localhost:8081/res4jservice/e404", String.class).getBody() + "\n";
-        } catch (HttpClientErrorException ex) {
-            if (ex.getStatusCode() == NOT_FOUND) {
-                throw new NotFoundException();
-            }
-            throw new GenericServiceException();
-        } catch (Exception ex) {
-            throw new GenericServiceException();
-        }
+    public String sampleCircuitBreaker404() {
+        // this call is ignored by resilience4j (HttpClientException)
+        return doServiceCall("http://localhost:9080/res4jservice/e404", String.class);
     }
 
-    @GetMapping("/res4jclient/host-delayed")
-    @CircuitBreaker(name = "default")
-    @Retry(name = "backendA")
-    @LogExecutionTime
+    @GetMapping("/res4jclient/backendA/delayed")
+    @CircuitBreaker(name = "backendA")
     public String hostDelayed() {
-        Supplier<ResponseEntity<String>> supplier = () -> this.restTemplate.getForEntity("http://localhost:9080/res4jservice/delayed", String.class);
-
-        ResponseEntity<String> responseEntity;
-        try {
-            responseEntity = executeWithTimeout(supplier);
-        } catch (HttpClientErrorException ex) {
-            throw ex;
-        } catch (TimeoutException ex) {
-            throw new danielh1307.res4jclient.ctrl.TimeoutException();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return responseEntity.getBody() + " Welt" + "\n";
+        // this leads to a TimeoutException
+        return doServiceCall("http://localhost:9080/res4jservice/delayed", String.class);
     }
 
-    @GetMapping("/res4jclient/host-working")
-    @CircuitBreaker(name = "default")
+    @GetMapping("res4jclient/backendA/retry404")
+    @CircuitBreaker(name = "backendA")
     @Retry(name = "backendA")
-    @LogExecutionTime
-    public String hostWorking() {
-        Supplier<ResponseEntity<String>> supplier = () -> this.restTemplate.getForEntity("http://localhost:9080/res4jservice/working", String.class);
-
-        ResponseEntity<String> responseEntity;
-        try {
-            responseEntity = executeWithTimeout(supplier);
-        } catch (HttpClientErrorException ex) {
-            throw ex;
-        } catch (TimeoutException ex) {
-            throw new danielh1307.res4jclient.ctrl.TimeoutException();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return responseEntity.getBody() + " Welt" + "\n";
+    public String retry404BackendA() {
+        // despite the method is annoted with @Retry, this should NOT lead to a retry here since we ignore HttpClientException
+        return doServiceCall("http://localhost:9080/res4jservice/e404", String.class);
     }
 
-    @GetMapping("/res4jclient/host-business-exception")
-    @CircuitBreaker(name = "default")
+    @GetMapping("res4jclient/backendA/retry500")
+    @CircuitBreaker(name = "backendA")
     @Retry(name = "backendA")
-    @LogExecutionTime
-    public String hostBusinessException() {
-        Supplier<ResponseEntity<String>> supplier = () -> this.restTemplate.getForEntity("http://localhost:9080/res4jservice/business-exception", String.class);
-
-        ResponseEntity<String> responseEntity;
-        try {
-            responseEntity = executeWithTimeout(supplier);
-        } catch (HttpClientErrorException ex) {
-            throw ex;
-        } catch (TimeoutException ex) {
-            throw new danielh1307.res4jclient.ctrl.TimeoutException();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return responseEntity.getBody() + " Welt" + "\n";
+    public String retry500BackendA() {
+        // since we have annotated the method with @Retry, this should result in a retry here
+        return doServiceCall("http://localhost:9080/res4jservice/e500", String.class);
     }
 
-    @GetMapping("/res4jclient/host-technical-exception")
-    @CircuitBreaker(name = "default")
-    @Retry(name = "backendA")
-    @LogExecutionTime
-    public String hostTechnicalException() {
-        Supplier<ResponseEntity<String>> supplier = () -> this.restTemplate.getForEntity("http://localhost:9080/res4jservice/technical-exception", String.class);
-
-        ResponseEntity<String> responseEntity;
+    @SuppressWarnings("SameParameterValue")
+    private <T> T doServiceCall(String url, Class<T> expectedResponseClass) {
         try {
-            responseEntity = executeWithTimeout(supplier);
+            Supplier<ResponseEntity> supplier = () -> this.restTemplate.getForEntity(url, expectedResponseClass);
+            ResponseEntity responseEntity = executeWithTimeout(supplier);
+
+            return expectedResponseClass.cast(responseEntity.getBody());
         } catch (HttpClientErrorException ex) {
+            LOGGER.error(format("For url %s, server responded with a client error exception: %s", url, ex.getMessage()));
             throw ex;
-        } catch (TimeoutException ex) {
-            throw new danielh1307.res4jclient.ctrl.TimeoutException();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (HttpServerErrorException ex) {
+            LOGGER.error(format("For url %s, server responded with a server exception: %s", url, ex.getMessage()));
+            throw ex;
+        } catch (java.util.concurrent.TimeoutException ex) {
+            LOGGER.error(format("For url %s, server exceeded timout", url));
+            throw new TimeoutException();
+        } catch (Exception ex) {
+            LOGGER.error(format("For url %s, server responded with unknown exception: %s", url, ex.getMessage()));
+            throw new GenericServiceException();
         }
-        return responseEntity.getBody() + " Welt" + "\n";
     }
 
     private <T> T executeWithTimeout(Supplier<T> supplier) throws Exception {

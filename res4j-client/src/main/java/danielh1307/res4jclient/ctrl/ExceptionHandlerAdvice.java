@@ -17,9 +17,4 @@ public class ExceptionHandlerAdvice {
         return "Timed out";
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(value = NotFoundException.class)
-    String handleNotFoundException(NotFoundException notFoundException, WebRequest webRequest) {
-        return "Not found";
-    }
 }
